@@ -1,3 +1,15 @@
+What does this fork do ?
+=======================
+
+Reproduce the weight writing mechanism found in this forked copy of darknet :
+
+https://github.com/gliese581gg/YOLO_tensorflow/tree/master/YOLO_weight_extractor
+
+Usage :
+1. compile darknet
+2. run : darknet yolo write_weights cfg/tiny-yolo.cfg tiny-yolo.weights
+
+
 ![Darknet Logo](http://pjreddie.com/media/files/darknet-black-small.png)
 
 #Darknet#

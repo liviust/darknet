@@ -413,7 +413,7 @@ layer parse_batchnorm(list *options, size_params params)
 
 layer parse_shortcut(list *options, size_params params, network net)
 {
-    char *l = option_find(options, "from");   
+    char *l = option_find(options, "from");
     int index = atoi(l);
     if(index < 0) index = params.index + index;
 
@@ -448,7 +448,7 @@ layer parse_activation(list *options, size_params params)
 
 route_layer parse_route(list *options, size_params params, network net)
 {
-    char *l = option_find(options, "layers");   
+    char *l = option_find(options, "layers");
     int len = strlen(l);
     if(!l) error("Route Layer must specify input layers");
     int n = 1;
@@ -541,8 +541,8 @@ void parse_net_options(list *options, network *net)
         net->step = option_find_int(options, "step", 1);
         net->scale = option_find_float(options, "scale", 1);
     } else if (net->policy == STEPS){
-        char *l = option_find(options, "steps");   
-        char *p = option_find(options, "scales");   
+        char *l = option_find(options, "steps");
+        char *p = option_find(options, "scales");
         if(!l || !p) error("STEPS policy must have steps and scales in cfg file");
 
         int len = strlen(l);
@@ -679,7 +679,7 @@ network parse_network_cfg(char *filename)
             params.c = l.out_c;
             params.inputs = l.outputs;
         }
-    }   
+    }
     free_list(sections);
     net.outputs = get_network_output_size(net);
     net.output = get_network_output(net);
@@ -1078,3 +1078,152 @@ void load_weights(network *net, char *filename)
     load_weights_upto(net, filename, net->n);
 }
 
+void write_weights_upto(network *net, int cutoff)
+{
+    fprintf(stderr, "Writing weights from networks..\n");
+    fflush(stdout);
+    //FILE *fp;
+
+    int i;
+    for(i = 0; i < net->n && i < cutoff; ++i){
+        layer l = net->layers[i];
+        if (l.dontload) continue;
+        if(l.type == CONVOLUTIONAL){
+            int num = l.n*l.c*l.size*l.size;
+	    //Hijack the YOLO Conv layer params - 16.01.30 CJY
+            //fread(l.biases, sizeof(float), l.n, fp);
+	    char filename[50];
+	    sprintf(filename, "cjy/%d_conv_biases.txt", i);
+	    fprintf(stderr,"Writing %s\n", filename);
+	    fprintf(stderr,"    %d entries...\n",l.n);
+	    FILE *fp = fopen(filename, "w");
+	    if(!fp) file_error(filename);
+	    int j;
+	    for(j = 0; j < l.n; j++){
+		fprintf(fp,"%f\n",l.biases[j]);
+	    }
+    	    fflush(fp);
+	    //
+            if (l.batch_normalize && (!l.dontloadscales)){
+                //fread(l.scales, sizeof(float), l.n, fp);
+                //fread(l.rolling_mean, sizeof(float), l.n, fp);
+                //fread(l.rolling_variance, sizeof(float), l.n, fp);
+	        //Hijack the YOLO Conv layer params - 16.01.30 CJY
+	        char filename2[50];
+	        sprintf(filename2, "cjy/%d_conv_normalize.txt", i);
+	        fprintf(stderr,"Writing %s\n", filename2);
+	        FILE *fp2 = fopen(filename2, "w");
+	        if(!fp2) file_error(filename2);
+	        int j;
+	        for(j = 0; j < l.n; j++){
+		    fprintf(fp2,"%f,",l.scales[j]);
+		    fprintf(fp2,"%f,",l.rolling_mean[j]);
+		    fprintf(fp2,"%f",l.rolling_variance[j]);
+		    fprintf(fp2,"\n");
+	        }
+    	        fflush(fp2);
+	        //
+            }
+            //fread(l.weights, sizeof(float), num, fp);
+	    //Hijack the YOLO Conv layer params - 16.01.30 CJY
+	    sprintf(filename, "cjy/%d_conv_weights.txt", i);
+	    fprintf(stderr,"Writing %s\n", filename);
+	    fp = fopen(filename, "w");
+	    if(!fp) file_error(filename);
+	    for(j = 0; j < num; j++){
+		fprintf(fp,"%f\n",l.weights[j]);
+	    }
+    	    fflush(fp);
+        }
+
+        if(l.type == DECONVOLUTIONAL){
+            int num = l.n*l.c*l.size*l.size;
+            //fread(l.biases, sizeof(float), l.n, fp);
+            //fread(l.weights, sizeof(float), num, fp);
+	    //Hijack the YOLO Conv layer params - 16.01.30 CJY
+	    char filename[50];
+	    sprintf(filename, "cjy/%d_deconv_biases.txt", i);
+	    fprintf(stderr,"Writing %s\n", filename);
+	    fprintf(stderr,"    %d entries...\n",l.n);
+	    FILE *fp = fopen(filename, "w");
+	    if(!fp) file_error(filename);
+	    int j;
+	    for(j = 0; j < l.n; j++){
+		fprintf(fp,"%f\n",l.biases[j]);
+	    }
+    	    fflush(fp);
+	    sprintf(filename, "cjy/%d_deconv_weights.txt", i);
+	    fprintf(stderr,"Writing %s\n", filename);
+	    fp = fopen(filename, "w");
+	    if(!fp) file_error(filename);
+	    for(j = 0; j < num; j++){
+		fprintf(fp,"%f\n",l.weights[j]);
+	    }
+    	    fflush(fp);
+	    //
+
+        }
+        if(l.type == CONNECTED){
+            //fread(l.biases, sizeof(float), l.outputs, fp);
+            //fread(l.weights, sizeof(float), l.outputs*l.inputs, fp);
+	    //Hijack the YOLO Conv layer params - 16.01.30 CJY
+	    char filename[50];
+	    sprintf(filename, "cjy/%d_fc_biases.txt", i);
+	    fprintf(stderr,"Writing %s\n", filename);
+	    fprintf(stderr,"    %d entries...\n",l.n);
+	    FILE *fp = fopen(filename, "w");
+	    if(!fp) file_error(filename);
+	    int j;
+	    for(j = 0; j < l.outputs; j++){
+		fprintf(fp,"%f\n",l.biases[j]);
+	    }
+    	    fflush(fp);
+	    sprintf(filename, "cjy/%d_fc_weights.txt", i);
+	    fprintf(stderr,"Writing %s\n", filename);
+	    fp = fopen(filename, "w");
+	    if(!fp) file_error(filename);
+	    for(j = 0; j < l.outputs*l.inputs; j++){
+		fprintf(fp,"%f\n",l.weights[j]);
+	    }
+    	    fflush(fp);
+	    //
+
+        }
+        if(l.type == LOCAL){
+            int locations = l.out_w*l.out_h;
+            int size = l.size*l.size*l.c*l.n*locations;
+            //fread(l.biases, sizeof(float), l.outputs, fp);
+            //fread(l.weights, sizeof(float), size, fp);
+	    //Hijack the YOLO Conv layer params - 16.01.30 CJY
+	    char filename[50];
+	    sprintf(filename, "cjy/%d_local_biases.txt", i);
+	    fprintf(stderr,"Writing %s\n", filename);
+	    fprintf(stderr,"    %d entries...\n",l.n);
+	    FILE *fp = fopen(filename, "w");
+	    if(!fp) file_error(filename);
+	    int j;
+	    for(j = 0; j < l.outputs; j++){
+		fprintf(fp,"%f\n",l.biases[j]);
+	    }
+    	    fflush(fp);
+	    sprintf(filename, "cjy/%d_local_weights.txt", i);
+	    fprintf(stderr,"Writing %s\n", filename);
+	    fp = fopen(filename, "w");
+	    if(!fp) file_error(filename);
+	    for(j = 0; j < size; j++){
+		fprintf(fp,"%f\n",l.weights[j]);
+	    }
+    	    fflush(fp);
+	    //
+
+        }
+
+    }
+    fprintf(stderr, "Done!\n");
+
+}
+
+void write_weights(network *net)
+{
+    write_weights_upto(net, net->n);
+}

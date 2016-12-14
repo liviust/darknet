@@ -282,6 +282,17 @@ void validate_yolo_recall(char *cfgfile, char *weightfile)
     }
 }
 
+void yolo_weights(char *cfgfile, char *weightfile, char *filename)
+{
+    network net = parse_network_cfg(cfgfile);
+    if (!weightfile) {
+        fprintf(stderr, "Unable to load weight file.\n");
+        return;
+    }
+    load_weights(&net, weightfile);
+    write_weights(&net);
+}
+
 void test_yolo(char *cfgfile, char *weightfile, char *filename, float thresh)
 {
     image **alphabet = load_alphabet();
@@ -348,6 +359,7 @@ void run_yolo(int argc, char **argv)
     char *weights = (argc > 4) ? argv[4] : 0;
     char *filename = (argc > 5) ? argv[5]: 0;
     if(0==strcmp(argv[2], "test")) test_yolo(cfg, weights, filename, thresh);
+    if(0==strcmp(argv[2], "write_weights")) yolo_weights(cfg, weights, filename);
     else if(0==strcmp(argv[2], "train")) train_yolo(cfg, weights);
     else if(0==strcmp(argv[2], "valid")) validate_yolo(cfg, weights);
     else if(0==strcmp(argv[2], "recall")) validate_yolo_recall(cfg, weights);
