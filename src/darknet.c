@@ -40,13 +40,13 @@ void average(int argc, char *argv[])
     network net = parse_network_cfg(cfgfile);
     network sum = parse_network_cfg(cfgfile);
 
-    char *weightfile = argv[4];   
+    char *weightfile = argv[4];
     load_weights(&sum, weightfile);
 
     int i, j;
     int n = argc - 5;
     for(i = 0; i < n; ++i){
-        weightfile = argv[i+5];   
+        weightfile = argv[i+5];
         load_weights(&net, weightfile);
         for(j = 0; j < net.n; ++j){
             layer l = net.layers[j];
@@ -299,6 +299,10 @@ void statistics_net(char *cfgfile, char *weightfile)
     }
 }
 
+// XX (mtourne): don't set any of the batch_normalize flags to 0
+// so scales=1, rolling_mean=0, rolling_variance=1 and it's
+// written in the same format that can be reloaded by the cfg
+// (expecting batch_normalize)
 void denormalize_net(char *cfgfile, char *weightfile, char *outfile)
 {
     gpu_index = -1;
@@ -311,11 +315,11 @@ void denormalize_net(char *cfgfile, char *weightfile, char *outfile)
         layer l = net.layers[i];
         if (l.type == CONVOLUTIONAL && l.batch_normalize) {
             denormalize_convolutional_layer(l);
-            net.layers[i].batch_normalize=0;
+            // net.layers[i].batch_normalize=0;
         }
         if (l.type == CONNECTED && l.batch_normalize) {
             denormalize_connected_layer(l);
-            net.layers[i].batch_normalize=0;
+            // net.layers[i].batch_normalize=0;
         }
         if (l.type == GRU && l.batch_normalize) {
             denormalize_connected_layer(*l.input_z_layer);
@@ -324,13 +328,13 @@ void denormalize_net(char *cfgfile, char *weightfile, char *outfile)
             denormalize_connected_layer(*l.state_z_layer);
             denormalize_connected_layer(*l.state_r_layer);
             denormalize_connected_layer(*l.state_h_layer);
-            l.input_z_layer->batch_normalize = 0;
-            l.input_r_layer->batch_normalize = 0;
-            l.input_h_layer->batch_normalize = 0;
-            l.state_z_layer->batch_normalize = 0;
-            l.state_r_layer->batch_normalize = 0;
-            l.state_h_layer->batch_normalize = 0;
-            net.layers[i].batch_normalize=0;
+            //l.input_z_layer->batch_normalize = 0;
+            //l.input_r_layer->batch_normalize = 0;
+            //l.input_h_layer->batch_normalize = 0;
+            //l.state_z_layer->batch_normalize = 0;
+            //l.state_r_layer->batch_normalize = 0;
+            //l.state_h_layer->batch_normalize = 0;
+            //net.layers[i].batch_normalize=0;
         }
     }
     save_weights(net, outfile);
@@ -447,4 +451,3 @@ int main(int argc, char **argv)
     }
     return 0;
 }
-
