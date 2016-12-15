@@ -16,7 +16,7 @@ model to bother
 
 Usage :
 
-    run: darknet cfg/tiny-yolo.cfg tiny-yolo.weights tiny-yolo-denorm.weights
+    run: darknet denormalize cfg/tiny-yolo.cfg tiny-yolo.weights tiny-yolo-denorm.weights
 
 Note: I've modified the code so the denormalied weights still write
 scales=1, rolling_mean=0, rolling_variance=1 in the saved weights, so it can
