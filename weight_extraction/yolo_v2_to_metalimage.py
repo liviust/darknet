@@ -102,8 +102,8 @@ def main():
     extr.conv_layer_weights('8', 3, 3, 128, 256)
     extr.conv_layer_weights('10', 3, 3, 256, 512)
     extr.conv_layer_weights('12', 3, 3, 512, 1024)
-    extr.conv_layer_weights('12', 3, 3, 1024, 1024)
-    extr.conv_layer_weights('12', 1, 1, 1024, 425)
+    extr.conv_layer_weights('13', 3, 3, 1024, 1024)
+    extr.conv_layer_weights('14', 1, 1, 1024, 425)
 
 if __name__ == '__main__':
     main()
