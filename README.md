@@ -1,5 +1,12 @@
 What does this fork do ?
-=======================
+========================
+
+Darknet is a pretty simple implementation, so fun to poke at.
+Here is some of my own notes on tooling
+
+## Extracting Weights
+
+tl;dr: check the weight_extraction dir
 
 Reproduce the weight writing mechanism found in this forked copy of darknet :
 
@@ -22,6 +29,40 @@ Note: I've modified the code so the denormalied weights still write
 scales=1, rolling_mean=0, rolling_variance=1 in the saved weights, so it can
 still be loaded without removing batch_normalization or loadscales in the cfg
 for that net.
+
+
+## Input image format / processing
+
+IplImage (opencv) to Darknet image format
+
+```
+image ipl_to_image(IplImage* src)
+{
+    unsigned char *data = (unsigned char *)src->imageData;
+    int h = src->height;
+    int w = src->width;
+    int c = src->nChannels;
+    int step = src->widthStep;
+    image out = make_image(w, h, c);
+    int i, j, k, count=0;;
+
+    for(k= 0; k < c; ++k){
+        for(i = 0; i < h; ++i){
+            for(j = 0; j < w; ++j){
+                out.data[count++] = data[i*step + j*c + k]/255.;
+            }
+        }
+    }
+    return out;
+}
+```
+
+image is organized
+* TOCHECK: bgr or rgb same as Opencv
+* shape: [channel, height, width]
+* scaled 0 to 1
+
+
 
 Original Readme
 ===============
